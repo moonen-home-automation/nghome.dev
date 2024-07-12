@@ -72,6 +72,15 @@ this with your password of choice. Then press *'Execute script'*.
 The last step will be right-clicking on the server and selecting *'Delete'*. When this is done, you can re-add the server just like above,
 only this time using your newly created password.
 
+## Exposing PostgreSQL port
+
+In order for us to connect to the PostgreSQL database from outside the Home Assistant host we need to expose its port.
+
+To do this we navigate to the *'Configuration'* tab on the add-on's page. Then under *'Network'* toggle *'Show disabled ports'* on.
+Now in the field that appears enter `5432` (or any other port of your choise).
+
+That's it, we can now access the database server from outside of Home Assistant.
+
 ## Sending Home Assistant data to TimescaleDB
 
 :::note
