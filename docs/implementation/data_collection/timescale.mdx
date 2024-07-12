@@ -1,0 +1,122 @@
+---
+sidebar_position: 1
+title: TimescaleDB
+---
+
+> [Perception](../../concept/perception.mdx)
+
+Data is everywhere in the smart home. From things like sensors to smart appliances, everything generates data.
+This data needs to be collected and stored efficiently.
+We need all this data if we want to build future automation and machine learning models.
+
+TimescaleDB allows us to easily collect, manage, and export our data. TimescaleDB is built on top of PostgreSQL,
+giving us the ability to easily access the collected data through pgAdmin or with SQL queries.
+Let's dive into what this technology is and how we can implement it in Home Assistant.
+
+## Overview
+
+### PostgreSQL
+
+[Source](https://www.postgresql.org/about/)
+
+PostgreSQL is a powerful, open-source object-relational database system that uses and extends the SQL language
+combined with many features that safely store and scale the most complicated data workloads.
+PostgreSQL has earned a strong reputation for its proven architecture, reliability, data integrity, robust feature set,
+extensibility, and the dedication of the open source community behind the software to consistently deliver performant
+and innovative solutions.
+
+### TimescaleDB
+
+[Source](https://docs.timescale.com/latest/introduction)
+
+TimescaleDB is an open-source time-series database optimized for fast ingest and complex queries. It speaks "full SQL"
+and is correspondingly easy to use like a traditional relation database, yet scales in ways previously reserved for NoSQL databases.
+
+Compared to the trade-offs demanded by these two alternatives (relational vs. NoSQL), TimescaleDB offers the best of
+both worlds for time-series data:
+
+#### Easy to use
+
+Full SQL interface for all SQL natively supported by PostgreSQL (including secondary indexes, non-time based
+aggregates, sub-queries, JOINs, window functions).
+
+* Connects to any client or tool that speaks PostgreSQL, no changes needed.
+* Time-oriented features, API functions, and optimizations.
+* Robust support for data retention policies.
+
+## Installing on HassOS
+
+Installing TimescaleDB on HassOS is made very simple by the Home Assistant add-on store.
+
+Before you can install the add-on you need to add the correct add-on repository first:
+You can do this by navigating to the "Add-ons" section of your Home Assistant settings. Press the "Add-on store" button in the bottom right.
+Then, using the menu at the top right navigate to "Repositories." Here, you need to add this repo: `https://github.com/Expaso/hassos-addons`
+
+After this is done, you can install the TimescaleDB and pgAdmin add-ons from the add-on store.
+
+For further installation and configuration options, please refer to the install guide [here](https://github.com/Expaso/hassos-addon-timescaledb#home-assistant-add-on-store).
+
+## Changing password
+
+By default, the TimescaleDB add-on creates a default user on the database with the password `homeassistant`. This is not secure
+by any means and needs to be changed.
+
+To change the password first open the WebUI of the pgAdmin extentsion. Now in the left-hand navigation bar, right-click on *'Servers'* and
+go to *'Register'->'Server'*. Fill in a name of your choice, I chose `TimescaleDB`. Then under the *'Connection'* tab, fill in the following
+hostname: `77b2833f-timescaledb`, and for the password, enter `homeassistant`. The server can now be managed from within pgAdmin.
+
+Now expand the server you just added by clicking on the arrow next to its name. Now right click the server and go to *'Query Tool'*.
+Here, we can actually change the password. Paste in the following query: `ALTER USER postgres WITH PASSWORD 'strongpassword';` replace
+this with your password of choice. Then press *'Execute script'*.
+
+The last step will be right-clicking on the server and selecting *'Delete'*. When this is done, you can re-add the server just like above,
+only this time using your newly created password.
+
+## Sending Home Assistant data to TimescaleDB
+
+:::note
+I am assuming here that you already have HACS installed, if not, please refer to these [docs](https://hacs.xyz/docs/user/).
+:::
+
+To get Home Assistant data into TimescaleDB we need to use a custom integration called LTSS (Long time state storage).
+This integration can easily be installed through HACS and can be found under the name `ltss`.
+
+Once LTSS has been installed we can configure it through our `configuration.yaml` file. First we need to add the URL of our
+new database as a secret. So in `secrets.yaml` add the following line, replacing `***` with your password:
+
+```yaml
+postgres_url: postgresql://postgres:***@77b2833f-timescaledb:5432/homeassistant
+```
+
+After that, we can add the following to `configuration.yaml`:
+
+```yaml
+ltss:
+  db_url: !secret postgres_url
+  include:
+    domains:
+      - sensor
+```
+
+You can see that in this config it will only include entities within the `sensor` domain. You can tweak this setting to include
+other domains or entities. For more config options, see [here](https://github.com/freol35241/ltss#configuration).
+
+The only thing left to do is restart Home Assistant and LTSS will start shipping data to your TimescaleDB! :tada:
+
+## Viewing data in pgAdmin
+
+Now we can use pgAdmin to view the data that is being shipped to the database. To do this, open up pgAdmin and make sure
+that you are connected to the TimescaleDB server. You can now right-click on the database named `homeassistant` and select
+the *'Query Tool'*. Execute the following query to view the data:
+
+```sql
+SELECT * from ltss
+```
+
+You will now be presented with the shipped data. You can see that there are columns for `time`, `entity_id`, `state`, and `attributes`. 
+On the bottom of the page, you can see how many entries there are in this database table.
+You can query for a specific entity with the following query, replacing it with the entity-id of your choice:
+
+```sql
+SELECT * from ltss WHERE entity_id='sensor.temperature'
+```
