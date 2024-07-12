@@ -1,0 +1,36 @@
+---
+sidebar_position: 2
+title: Python + Pandas
+---
+
+> [Perception](../../concept/perception.mdx)
+
+In the topic about [TimescaleDB](./timescale.mdx) you can see how data can be shipped from Home Assistant to an external database.
+Now this raw data is of little use for us we want to use it for analytics and machine learning.
+Luckily we can easily manipulate and parse this data using Python and an amazing library called Pandas.
+
+## Pandas
+
+Pandas is an open source Python package that is most widely used for data science/data analytics and machine learning tasks.
+Pandas makes it simple to do many of the time consuming, repetitive tasks associated with working with data, including:
+
+* Data cleansing
+* Data fill
+* Data normalization
+* Merging and joining data
+* Data visualizations
+* Statistical analysis
+* Data inspection
+* Loading and saving data
+* And much more
+
+Pandas can retrieve data and format it as a table, these tables are called DataFrames.
+These DataFrames consist of rows and columns just like your used to with tables.
+
+> [Source](https://www.activestate.com/resources/quick-reads/what-is-pandas-in-python-everything-you-need-to-know/)
+
+## Lab - Working with Pandas
+
+I created a lab exercise that you can you do for free on Google Colab. Check it out [here](https://colab.research.google.com/github/moonen-home-automation/colab-notebooks/blob/main/pandas-example/pandas-example.ipynb)
+
+This will show you an use case of manipulating data coming from Home Assistant sensor and making it suitable for training a ML model.
